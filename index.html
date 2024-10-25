@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download Terabox Video</title>
+    <title>Download Instagram Video</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -49,34 +49,10 @@
         button:hover {
             background-color: #0056b3;
         }
-        #video-container {
-            width: 80%;
-            max-width: 700px;
-            height: 450px;
-            border: 1px solid #007bff;
-            border-radius: 5px;
-            display: none; /* Initially hidden */
-            overflow: hidden; /* Prevent scrolling */
-            position: relative; /* For absolute positioning of the iframe */
-            margin: 0 auto; /* Center the container */
-        }
-        iframe {
-            width: 100%; /* Fill the container */
-            height: 100%; /* Fill the container */
-            border: none; /* Remove border */
-            position: absolute; /* Position the iframe */
-            top: 0; /* Align to the top */
-            left: 0; /* Align to the left */
-        }
         .error {
             color: red;
             margin-top: 10px;
             font-weight: bold;
-        }
-        .timer {
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: red;
         }
         .download-btn {
             display: none; /* Initially hidden */
@@ -92,25 +68,6 @@
         .download-btn:hover {
             background-color: #0056b3;
         }
-        .telegram-btn {
-            display: flex;
-            align-items: center;
-            margin-top: 20px;
-            text-decoration: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            background-color: #0088cc;
-            color: white;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        .telegram-btn img {
-            width: 24px;
-            margin-right: 10px;
-        }
-        .telegram-btn:hover {
-            background-color: #007bb5;
-        }
         footer {
             margin-top: 20px;
             font-size: 0.9em;
@@ -118,69 +75,53 @@
     </style>
 </head>
 <body>
-    <h1>Download Your Terabox Video</h1>
-    <input type="text" id="videoLink" placeholder="Paste your video link here">
+    <h1>Download Your Instagram Video</h1>
+    <input type="text" id="videoLink" placeholder="Paste your Instagram video link here">
     <button id="downloadBtn">Download</button>
-    <div class="timer" id="timerMessage"></div>
-    <div id="video-container">
-        <iframe id="videoIframe" src="" frameborder="0" allowfullscreen scrolling="no"></iframe>
-    </div>
-    <div id="downloadButtons" style="text-align: center; margin-top: 10px;">
-        <button class="download-btn" id="hdBtn">Download HD</button>
-        <button class="download-btn" id="fastBtn">Download Fast</button>
-    </div>
     <div class="error" id="errorMessage"></div>
+    <div id="downloadContainer" style="text-align: center; margin-top: 10px;">
+        <button class="download-btn" id="downloadVideoBtn">Download Video</button>
+    </div>
     <footer>
         <a class="telegram-btn" href="https://t.me/codetech01" target="_blank">
-            <img src="https://brandpalettes.com/wp-content/uploads/2022/06/Telegram-Logo-JPG-300x300.jpg" alt="Telegram Logo">
             Join our Telegram Channel
         </a>
     </footer>
 
     <script>
-        function extractSurl(url) {
-            const urlParams = new URLSearchParams(new URL(url).search);
-            return urlParams.get('surl');
-        }
-
         document.getElementById('downloadBtn').onclick = function() {
             const videoLink = document.getElementById('videoLink').value;
-            const videoContainer = document.getElementById('video-container');
-            const videoIframe = document.getElementById('videoIframe');
             const errorMessage = document.getElementById('errorMessage');
-            const timerMessage = document.getElementById('timerMessage');
-            const hdBtn = document.getElementById('hdBtn');
-            const fastBtn = document.getElementById('fastBtn');
-
+            const downloadVideoBtn = document.getElementById('downloadVideoBtn');
             errorMessage.textContent = ''; // Clear previous error message
-            timerMessage.textContent = 'Please wait... Your link is under processing for 10 seconds.';
+            downloadVideoBtn.style.display = 'none'; // Hide the download button initially
 
             if (videoLink) {
-                const surl = extractSurl(videoLink); // Extract surl parameter
-                if (surl) {
-                    let timer = 3;
-                    const interval = setInterval(() => {
-                        timerMessage.textContent = `Please wait ${timer} seconds. Your link is under processing.`;
-                        timer--;
-                        if (timer < 0) {
-                            clearInterval(interval);
-                            timerMessage.textContent = ''; // Clear timer display after 3 seconds
-
-                            // Show the video player after the timer
-                            const playerUrl = `https://player.terabox.tech/?url=https://teraboxapp.com/s/1${surl}`;
-                            videoIframe.src = playerUrl;
-                            videoContainer.style.display = 'block'; // Show the video container
-
-                            // Show the download buttons
-                            hdBtn.style.display = 'inline-block';
-                            fastBtn.style.display = 'inline-block';
-                        }
-                    }, 1000); // 1 second interval
-                } else {
-                    errorMessage.textContent = 'Invalid Terabox link. Please enter a valid link with a "surl" parameter.';
-                }
+                // Send POST request to your Vercel API
+                fetch('/api/downloadInstagram', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: videoLink }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        errorMessage.textContent = data.error; // Show error if present
+                    } else {
+                        // Show the download button
+                        downloadVideoBtn.style.display = 'inline-block';
+                        downloadVideoBtn.onclick = function() {
+                            window.location.href = data.downloadUrl; // Redirect to the download URL
+                        };
+                    }
+                })
+                .catch(error => {
+                    errorMessage.textContent = 'Error processing your request. Please try again.';
+                });
             } else {
-                errorMessage.textContent = 'Please enter a valid video link.';
+                errorMessage.textContent = 'Please enter a valid Instagram link.';
             }
         };
     </script>
